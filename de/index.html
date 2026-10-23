@@ -47,12 +47,11 @@
 
 <section id="step-2">
   <h2>2 · ppq-Plugin installieren (aus seinem GitHub-Repo)</h2>
-  <p>Das Plugin ist <strong>noch nicht im Hermes-Plugin-Katalog</strong>, installiere es also manuell aus dem Repository. Das kopiert die Plugin-Dateien in das Plugin-Verzeichnis von Hermes — genau dorthin, wo sie auf dem Rechner des Autors liegen (verifiziert identisch mit dem Repo):</p>
+  <p>Das Plugin ist <strong>noch nicht im Hermes-Plugin-Katalog</strong>, installiere es also manuell aus dem Repository. Das kopiert die Plugin-Dateien in das Plugin-Verzeichnis von Hermes:</p>
   <pre><code>git clone https://github.com/thepurpose-npub/ppq-hermes-provider
 mkdir -p ~/.hermes/plugins/model-providers/ppq
 cp ppq-hermes-provider/model-providers/ppq/{__init__.py,plugin.yaml} \
    ~/.hermes/plugins/model-providers/ppq/</code></pre>
-  <p class="aside">Optional, gepinnte Installation: <code>cd ppq-hermes-provider &amp;&amp; git checkout ca8cea59a3712cffa31d2759a30a9f8be66fddc2</code> vor dem <code>cp</code> — installiert exakt die Version, die der Autor nutzt. Danach entfernt <code>rm -rf ppq-hermes-provider</code> den Clone — die Kopien unter <code>~/.hermes/plugins/</code> sind das, was Hermes lädt.</p>
 </section>
 
 <section id="step-3">
@@ -76,8 +75,7 @@ cp ppq-hermes-provider/model-providers/ppq/{__init__.py,plugin.yaml} \
 #   den sk-...-Key aus Schritt 3 einfügen, Enter drücken, fertig.</code></pre>
   <p>Prüfen, ob gespeichert:</p>
   <pre><code>hermes auth list            # sollte einen Credential unter "ppq" zeigen</code></pre>
-  <p class="aside">Fallback, falls <code>hermes auth add ppq</code> auf deiner Installation nicht erkannt wird: <code>hermes config env-path | xargs nano</code> ausführen und die Zeile <code>PPQ_API_KEY=sk-...</code> (dein echter Key) unten anfügen, speichern, dann den Neustart unten durchführen.</p>
-  <p>Dann <strong>Hermes neu starten</strong> (TUI beenden, <code>hermes --tui</code> neu starten — oder <code>hermes gateway restart</code>, falls du ein Gateway betreibst), damit das Plugin lädt und den Key übernimmt.</p>
+  <p class="aside">Fallback, falls <code>hermes auth add ppq</code> auf deiner Installation nicht erkannt wird: <code>hermes config env-path | xargs nano</code> ausführen und die Zeile <code>PPQ_API_KEY=sk-...</code> (dein echter Key) unten anfügen, dann speichern.</p>
   <p>Prüfen, ob geladen:</p>
   <pre><code>hermes plugins list         # sollte "ppq — PayPerQ — v0.3.0" zeigen
 hermes auth status          # sollte ppq als ready zeigen (nicht missing/expired)</code></pre>
@@ -93,7 +91,7 @@ cat &gt; ~/.hermes/ppq-plugin/pins.json &lt;&lt;'EOF'
 ]
 EOF</code></pre>
   <p>Starte dann <code>hermes --tui</code>, führe <code>/model</code> aus und wähle den <code>ppq</code>-Provider — <code>z-ai/glm-5.3-flash</code> sollte der einzige Eintrag unter seinem pinned-Bereich sein. Auswählen, damit es zum Default wird.</p>
-  <p class="aside">Nach Anweisung des Autors ist dies das einzige gepinnte Modell — glm-5.3-flash ist kein Trial-/Gratis-Modell, daher ist hier kein Bootstrap-Credit-Fallback konfiguriert. Wenn du lieber zuerst den Live-Katalog durchstöbern willst: lösche <code>pins.json</code>, und das Plugin fällt auf eine kuratierte Liste der Top-Chat-Modelle zurück.</p>
+  <p class="aside">glm-5.3-flash ist kein Trial-/Gratis-Modell, daher ist hier kein Bootstrap-Credit-Fallback konfiguriert. Wenn du lieber zuerst den Live-Katalog durchstöbern willst: lösche <code>pins.json</code>, und das Plugin fällt auf eine kuratierte Liste der Top-Chat-Modelle zurück.</p>
 </section>
 
 <section id="safety-rails">
