@@ -12,9 +12,12 @@ Served by GitHub Pages from this repo (`main` root):
 
 ## Repo layout
 
-- `index.html`, `style.css`, `.nojekyll` — the Pages content, served from
-  `main` root (plain static files, no build step, no JS, no external requests).
-  Pages source: Settings → Pages → "Deploy from a branch" → `main`, folder `/ (root)`.
+- `index.html`, `de/index.html`, `style.css`, `.nojekyll` — the Pages content,
+  served from `main` root (plain static files, no build step, no JS, no
+  external requests). English is the default tree (`/`), German lives at
+  `/de/`. Pages source: Settings → Pages → "Deploy from a branch" → `main`,
+  folder `/ (root)`.
+- A language pill is visible at the top of both pages (never JS-driven).
 - Local preview: `python3 -m http.server 8778` from this repo's root, then
   open http://localhost:8778/.
 - This site deliberately lives in its own repo — the plugin repo
@@ -25,6 +28,8 @@ Served by GitHub Pages from this repo (`main` root):
 
 ## Status
 
-- **v1.0.0 (EN)** — content complete: 7 setup steps, cost-rail check,
-  troubleshooting, and a collapsed "context & cost cheatsheet" section.
-- **v1.1.0 (planned)** — German as default language, English as secondary.
+- **v1.1.0** — German localization (`de/index.html`) complete: all 7 setup
+  steps, cost-rail check, troubleshooting, and the cost cheatsheet translated.
+  Language switcher added: pill in the hero, English default, German
+  cross-linked.
+- **v1.2.0 (planned)** — further UI polish and translations.

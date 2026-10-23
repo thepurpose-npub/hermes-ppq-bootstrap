@@ -32,6 +32,27 @@ body {
   background: linear-gradient(180deg, #0f2436 0%, #143244 100%);
   color: var(--accent-ink);
 }
+.lang-row { max-width: 46rem; margin: 0 auto 0.75rem; text-align: right; }
+.lang a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid #4a7a8a;
+  border-radius: 999px;
+  color: var(--accent-ink);
+  text-decoration: none;
+  font-size: 0.9rem;
+  background: rgba(255, 255, 255, 0.08);
+}
+.lang svg.flag {
+  width: 1.25em;
+  height: 0.84em;
+  border-radius: 2px;
+  outline: 1px solid rgba(255, 255, 255, 0.25);
+  flex: none;
+}
+.lang a:hover { background: rgba(255, 255, 255, 0.2); }
 .hero .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.08em;

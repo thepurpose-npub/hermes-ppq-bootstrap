@@ -9,10 +9,14 @@
 </head>
 <body>
 <header class="hero">
+  <div class="lang-row">
+    <nav class="lang" aria-label="Language">
+      <a href="de/" lang="de" hreflang="de" rel="alternate"><svg class="flag" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3 2" aria-hidden="true" focusable="false"><rect width="3" height="2" fill="#000"/><rect y="0.667" width="3" height="0.667" fill="#dd0000"/><rect y="1.333" width="3" height="0.667" fill="#ffce00"/></svg> Deutsch</a>
+    </nav>
+  </div>
   <p class="eyebrow">Setup guide</p>
   <h1>Bootstrap Hermes with PayPerQ (ppq.ai)</h1>
   <p class="lede">Seven steps to a working Hermes Agent on PayPerQ — pay-per-use, no subscription — with <code>z-ai/glm-5.3-flash</code> as the only pinned model. Once the smoke test works, the agent itself is your LLM interface.</p>
-  <p class="note">You'll be backseat-driven live during this. Ask anytime.</p>
 </header>
 
 <nav class="toc" aria-label="Contents">
@@ -34,13 +38,10 @@
 <main>
 <section id="step-1">
   <h2>1 · Install Hermes</h2>
-  <pre><code>curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
-hermes --version
-# "command not found"? Reload your shell first:  source ~/.bashrc</code></pre>
+  <pre><code>curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash</code></pre>
   <div class="warn">
     <p><strong>Don't let it jump straight into the setup wizard.</strong> At the end of the install, the installer automatically launches <code>hermes setup</code> — the full setup wizard with model/provider selection. <strong>Quit it now</strong> (Ctrl+C, or pick "cancel/exit") and come back here. The ppq provider isn't installed yet, so anything you pick in that wizard would just have to be redone. Finish steps 2–5 first, then select the ppq model in step 5. (Non-interactive or headless installs skip the wizard automatically.)</p>
   </div>
-  <p>On the first <code>hermes --tui</code> launch the TUI only installs its Node dependencies (one-time, a few seconds) — there is no first-run wizard.</p>
 </section>
 
 <section id="step-2">
@@ -57,7 +58,7 @@ cp ppq-hermes-provider/model-providers/ppq/{__init__.py,plugin.yaml} \
   <h2>3 · Get a PayPerQ account + API key</h2>
   <p>Pay-per-use, no subscription: top up from <strong>$0.10</strong> (crypto or card), then grab a key.</p>
   <ul>
-    <li>Fastest, no email: <code>curl -X POST https://api.ppq.ai/accounts/create</code> → returns a <code>credit_id</code> + <code>api_key</code> immediately. Top up that credit_id at ppq.ai.</li>
+    <li>Fastest: <code>curl -X POST https://api.ppq.ai/accounts/create</code> → returns a <code>credit_id</code> + <code>api_key</code> immediately. Top up that credit_id at ppq.ai.</li>
     <li>Or sign up in the browser at <a href="https://ppq.ai" target="_blank" rel="noopener noreferrer">ppq.ai</a> and create the key under <strong>API Docs</strong>.</li>
   </ul>
   <p>Your key = <code>sk-…</code>. Keep it private.</p>
@@ -247,7 +248,6 @@ instead of the full command. Install it so it works in new shells too.</code></p
 </main>
 
 <footer>
-  <p>Questions during setup: ask the person who gave you this page — they're backseat-driving.</p>
   <p class="meta">ppq plugin v0.3.0, published 2026-10-21 · <a href="https://github.com/thepurpose-npub/ppq-hermes-provider" target="_blank" rel="noopener noreferrer">github.com/thepurpose-npub/ppq-hermes-provider</a></p>
 </footer>
 </body>

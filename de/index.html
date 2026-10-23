@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hermes mit PayPerQ (ppq.ai) einrichten</title>
+<meta name="description" content="Einrichtungsanleitung: Hermes Agent mit dem ppq-Modell-Provider-Plugin, glm-5.3-flash als einziges gepinntes Modell.">
+<link rel="alternate" hreflang="en" href="../">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header class="hero">
+  <div class="lang-row">
+    <nav class="lang" aria-label="Sprache">
+      <a href="../" lang="en" hreflang="en" rel="alternate"><svg class="flag" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30" aria-hidden="true" focusable="false"><clipPath id="uk-s"><path d="M0,0 v30 h60 v-30 z"/></clipPath><clipPath id="uk-t"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/></clipPath><g clip-path="url(#uk-s)"><rect width="60" height="30" fill="#012169"/><path d="M0,0 60,30M60,0 0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 60,30M60,0 0,30" clip-path="url(#uk-t)" stroke="#C8102E" stroke-width="4"/><path d="M30,0 v30M0,15 h60" stroke="#fff" stroke-width="10"/><path d="M30,0 v30M0,15 h60" stroke="#C8102E" stroke-width="6"/></g></svg> English</a>
+    </nav>
+  </div>
+  <p class="eyebrow">Einrichtungsanleitung</p>
+  <h1>Hermes mit PayPerQ (ppq.ai) einrichten</h1>
+  <p class="lede">Sieben Schritte zu einem laufenden Hermes Agent auf PayPerQ — pay-per-use, kein Abo — mit <code>z-ai/glm-5.3-flash</code> als einzigem gepinnten Modell. Sobald der Funktionstest klappt, ist der Agent selbst deine LLM-Schnittstelle.</p>
+</header>
+
+<nav class="toc" aria-label="Inhalt">
+  <ol>
+    <li><a href="#step-1">Hermes installieren</a></li>
+    <li><a href="#step-2">ppq-Plugin installieren</a></li>
+    <li><a href="#step-3">PayPerQ-Konto + API-Key</a></li>
+    <li><a href="#step-4">API-Key hinterlegen</a></li>
+    <li><a href="#step-5">glm-5.3-flash pinnen</a></li>
+    <li><a href="#safety-rails">&#9888; Kosten-Leitplanken-Check</a></li>
+    <li><a href="#step-6">Funktionstest</a></li>
+    <li><a href="#step-7">Übergabe an den LLM</a></li>
+    <li><a href="#troubleshooting">Fehlerbehebung</a></li>
+    <li><a href="#inspiration">&#128161; Erstes Projekt: ein <code>h</code>-Launcher</a></li>
+    <li><a href="#cost-cheatsheet">Kontext- &amp; Kosten-Spickzettel (eingeklappt)</a></li>
+  </ol>
+</nav>
+
+<main>
+<section id="step-1">
+  <h2>1 · Hermes installieren</h2>
+  <pre><code>curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash</code></pre>
+  <div class="warn">
+    <p><strong>Nicht direkt in den Setup-Assistenten springen lassen.</strong> Am Ende der Installation startet der Installer automatisch <code>hermes setup</code> — den vollständigen Setup-Assistenten mit Modell-/Provider-Auswahl. <strong>Beende ihn sofort</strong> (Strg+C, oder „cancel/exit" wählen) und komm hierher zurück. Das ppq-Plugin ist noch nicht installiert — alles, was du im Assistenten wählst, müsstest du danach wiederholen. Schließe zuerst die Schritte 2–5 ab und wähle das ppq-Modell dann in Schritt 5. (Nicht-interaktive bzw. headless-Installationen überspringen den Assistenten automatisch.)</p>
+  </div>
+</section>
+
+<section id="step-2">
+  <h2>2 · ppq-Plugin installieren (aus seinem GitHub-Repo)</h2>
+  <p>Das Plugin ist <strong>noch nicht im Hermes-Plugin-Katalog</strong>, installiere es also manuell aus dem Repository. Das kopiert die Plugin-Dateien in das Plugin-Verzeichnis von Hermes — genau dorthin, wo sie auf dem Rechner des Autors liegen (verifiziert identisch mit dem Repo):</p>
+  <pre><code>git clone https://github.com/thepurpose-npub/ppq-hermes-provider
+mkdir -p ~/.hermes/plugins/model-providers/ppq
+cp ppq-hermes-provider/model-providers/ppq/{__init__.py,plugin.yaml} \
+   ~/.hermes/plugins/model-providers/ppq/</code></pre>
+  <p class="aside">Optional, gepinnte Installation: <code>cd ppq-hermes-provider &amp;&amp; git checkout ca8cea59a3712cffa31d2759a30a9f8be66fddc2</code> vor dem <code>cp</code> — installiert exakt die Version, die der Autor nutzt. Danach entfernt <code>rm -rf ppq-hermes-provider</code> den Clone — die Kopien unter <code>~/.hermes/plugins/</code> sind das, was Hermes lädt.</p>
+</section>
+
+<section id="step-3">
+  <h2>3 · PayPerQ-Konto + API-Key besorgen</h2>
+  <p>Pay-per-use, kein Abo: ab <strong>$0.10</strong> aufladen (Krypto oder Karte), dann einen Key ziehen.</p>
+  <ul>
+    <li>Schnellster Weg: <code>curl -X POST https://api.ppq.ai/accounts/create</code> → liefert sofort eine <code>credit_id</code> + <code>api_key</code>. Diese credit_id bei ppq.ai aufladen.</li>
+    <li>Oder im Browser bei <a href="https://ppq.ai" target="_blank" rel="noopener noreferrer">ppq.ai</a> registrieren und den Key unter <strong>API Docs</strong> anlegen.</li>
+  </ul>
+  <p>Dein Key = <code>sk-…</code>. Privat halten.</p>
+  <div class="warn">
+    <p><strong>⚠️ Speichere die credit_id in dem Moment, in dem du sie auflädst — sie IST dein ppq-Konto.</strong> Beim API-Weg ist die <code>credit_id</code>, die bei der Kontoerstellung zurückkommt, das Einzige, das dein Konto identifiziert. Wenn du sie auflädst und dann verlierst, kannst du das Guthaben verlieren und aus dem Konto ausgesperrt sein. Speichere die <code>credit_id</code> an einem sicheren Ort — oder setze ein Lesezeichen auf die ppq-URL (sie enthält die credit_id), damit du immer zum aufgeladenen Konto zurückkommst. Mach das <em>vor</em> dem Aufladen, nicht danach.</p>
+  </div>
+</section>
+
+<section id="step-4">
+  <h2>4 · API-Key hinterlegen</h2>
+  <p><strong>Am einfachsten (empfohlen):</strong> den eingebauten Credential-Manager von Hermes nutzen. Er fragt nach dem Key, legt ihn im Credential-Pool ab und zeigt eine Bestätigung — kein Datei-Editieren, kein Tippfehler-Risiko in einer versteckten Datei:</p>
+  <pre><code>hermes auth add ppq
+# → Aufforderung: "Paste your ppq API key:"
+#   den sk-...-Key aus Schritt 3 einfügen, Enter drücken, fertig.</code></pre>
+  <p>Prüfen, ob gespeichert:</p>
+  <pre><code>hermes auth list            # sollte einen Credential unter "ppq" zeigen</code></pre>
+  <p class="aside">Fallback, falls <code>hermes auth add ppq</code> auf deiner Installation nicht erkannt wird: <code>hermes config env-path | xargs nano</code> ausführen und die Zeile <code>PPQ_API_KEY=sk-...</code> (dein echter Key) unten anfügen, speichern, dann den Neustart unten durchführen.</p>
+  <p>Dann <strong>Hermes neu starten</strong> (TUI beenden, <code>hermes --tui</code> neu starten — oder <code>hermes gateway restart</code>, falls du ein Gateway betreibst), damit das Plugin lädt und den Key übernimmt.</p>
+  <p>Prüfen, ob geladen:</p>
+  <pre><code>hermes plugins list         # sollte "ppq — PayPerQ — v0.3.0" zeigen
+hermes auth status          # sollte ppq als ready zeigen (nicht missing/expired)</code></pre>
+</section>
+
+<section id="step-5">
+  <h2>5 · glm-5.3-flash als einziges gepinntes Modell festlegen</h2>
+  <p>Der Picker des Plugins löst Pins in Schichten auf: <strong>deine</strong> <code>pins.json</code> gewinnt gegen alle Live-/Static-Defaults — schreibe also genau einen Eintrag.</p>
+  <pre><code>mkdir -p ~/.hermes/ppq-plugin
+cat &gt; ~/.hermes/ppq-plugin/pins.json &lt;&lt;'EOF'
+[
+  "z-ai/glm-5.3-flash"
+]
+EOF</code></pre>
+  <p>Starte dann <code>hermes --tui</code>, führe <code>/model</code> aus und wähle den <code>ppq</code>-Provider — <code>z-ai/glm-5.3-flash</code> sollte der einzige Eintrag unter seinem pinned-Bereich sein. Auswählen, damit es zum Default wird.</p>
+  <p class="aside">Nach Anweisung des Autors ist dies das einzige gepinnte Modell — glm-5.3-flash ist kein Trial-/Gratis-Modell, daher ist hier kein Bootstrap-Credit-Fallback konfiguriert. Wenn du lieber zuerst den Live-Katalog durchstöbern willst: lösche <code>pins.json</code>, und das Plugin fällt auf eine kuratierte Liste der Top-Chat-Modelle zurück.</p>
+</section>
+
+<section id="safety-rails">
+  <h2>&#9888; Vor deiner ersten Nachricht — Kosten-Leitplanken-Check</h2>
+  <p>Wenn du die Modellauswahl überspringst, schützt dich Hermes nicht: sein Default-Modell-Slot ist leer, und was der Picker zuerst anzeigt, wird zum vollen Preis abgerechnet. Ein frisches Hermes kann auf einem sehr teuren Modell landen — ein verpasster <code>/model</code>-Schritt genügt. Prüfe alle drei Leitplanken, <strong>bevor du deine erste echte Nachricht schickst</strong>:</p>
+  <ol>
+    <li><strong>Prüfe die Modellzeile im TUI-Header.</strong> Bei einem frischen <code>hermes --tui</code>-Start zeigt der Header das aktive Modell. Dort muss <code>z-ai/glm-5.3-flash</code> stehen — zeigt er etwas anderes: <code>/model</code> ausführen, den <code>ppq</code>-Provider-Bereich öffnen und es als Default wählen.</li>
+    <li><strong>Prüfe das Reasoning-Level.</strong> Führe <code>/reasoning</code> in der TUI aus. Hermes' Default ist <strong>medium</strong> — das ist das empfohlene Level: es balanciert Qualität gegen die Output-Kosten pro Anfrage. Hoch bedeutet spürbar mehr abgerechnete Output-Tokens bei jedem Turn.</li>
+    <li><strong>Prüfe die Kosten.</strong> Die TUI zeigt keinen Preis pro Antwort. Das Kostenfeld der Statusleiste (opt-in via <code>display.show_cost</code>) ist nur eine laufende Session-Schätzung — und bei Relay-Endpunkten wie ppq kann dort <code>n/a</code> stehen. Der verbindliche Preis pro Anfrage ist die <strong>Konto-Aktivitätsseite von ppq.ai</strong>: glm-5.3-flash sollte bei etwa <strong>$0.002–$0.01</strong> pro Austausch liegen. Siehst du dort einstellige Dollarbeträge statt Cent-Bruchteilen: stopp — du bist auf dem falschen Modell.</li>
+  </ol>
+  <p class="aside">Zusätzliche Leitplanken: eine Session pro Thema (<code>/new</code> zwischen Themen — <a href="#cost-cheatsheet">lange Sessions abrechnen jeden Turn mehr Input-Tokens — siehe den Kosten-Spickzettel unten</a>); gelegentlich ins ppq.ai-Usage-Dashboard schauen, wenn sich etwas teuer anfühlt; und deinen <code>sk-…</code>-Key nirgendwo einfügen außer bei <code>hermes auth add ppq</code>.</p>
+</section>
+
+<section id="step-6">
+  <h2>6 · Funktionstest</h2>
+  <pre><code>hermes -z "Sag hallo in einem Satz."</code></pre>
+  <p>Sollte eine Antwort zurückgeben, abgerechnet mit etwa <strong>$0.002–$0.01</strong> von deinem Guthaben (glm-5.3-flash: $0.16/M Input, $0.53/M Output — sehr günstig). Danach auf der ppq.ai-Konto-Aktivitätsseite nachsehen: die Anfrage sollte dort auftauchen, im Cent-Bruchteil-Bereich abgerechnet.</p>
+  <p class="aside">Das ist ein One-Shot-Lauf — er gibt die Antwort aus und beendet sich; damit sind Key und Modell bewiesen, ohne eine volle Session zu öffnen. Für den Alltag: <code>hermes --tui</code> statt <code>-z</code>.</p>
+</section>
+
+<section id="step-7">
+  <h2>7 · Übergabe an den LLM — ab hier sprichst du mit Hermes</h2>
+  <p>Sobald der Funktionstest klappt, <strong>bist du fertig — <code>hermes --tui</code> startet Hermes, und ab hier sprichst du einfach mit ihm: viben, explorieren, fragen, bauen, arbeiten.</strong> Der <strong>Agent selbst ist die LLM-Schnittstelle</strong>. Ab hier kannst du:</p>
+  <ul>
+    <li>Einfach Fragen/Befehle tippen — Hermes plant und führt aus, mit seinen eingebauten Tools (Websuche, Dateien, Terminal usw.).</li>
+    <li>Beliebige konkrete Aufgaben in normaler Sprache übergeben — z. B. <em>„fasse diese URL zusammen"</em>, <em>„recherchiere X und gib mir 3 Optionen"</em>, <em>„schreib ein Skript, das Y tut"</em>.</li>
+    <li><code>/new</code> beim Themenwechsel nutzen, um Sessions sauber und günstig zu halten.</li>
+    <li><code>/model</code>, um später das Modell zu wechseln (das Plugin bietet auch eine Live-Liste aus ppqs <code>/v1/models</code>).</li>
+  </ul>
+</section>
+
+<section id="troubleshooting">
+  <h2>Fehlerbehebung</h2>
+  <table>
+    <caption>Schnelle Lösungen für die häufigsten Symptome.</caption>
+    <thead>
+      <tr><th scope="col">Symptom</th><th scope="col">Wahrscheinliche Lösung</th></tr>
+    </thead>
+    <tbody>
+      <tr><td data-label="Symptom">/model zeigt unter ppq nichts</td><td data-label="Wahrscheinliche Lösung">pins.json fehlerhaft → reparieren oder löschen; prüfen, dass <code>hermes plugins list</code> ppq zeigt</td></tr>
+      <tr><td data-label="Symptom">Auth-Fehler 401</td><td data-label="Wahrscheinliche Lösung">falscher API-Key → <code>hermes auth list</code>, nötigenfalls neu anlegen</td></tr>
+      <tr><td data-label="Symptom">Guthaben reicht nicht</td><td data-label="Wahrscheinliche Lösung">bei ppq.ai aufladen (credit_id → Add Funds)</td></tr>
+      <tr><td data-label="Symptom">Kosten zeigt unknown</td><td data-label="Wahrscheinliche Lösung">die TUI-Statusleiste schätzt nur die Session-Kosten (opt-in via <code>display.show_cost</code>) und bleibt bei Relay-Endpunkten auf <code>n/a</code> — für den echten Abrechnungsbetrag die ppq.ai-Konto-Aktivitätsseite prüfen</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="inspiration">
+  <h2>&#128161; Erstes Projekt — ein <code>h</code>-Launcher</h2>
+  <p>Jetzt, wo deine Hermes-Instanz läuft, gib ihr ihren ersten kleinen Job: einen Launcher, damit du nicht den vollen Befehl tippen musst, um in die TUI zu kommen. Statt <code>hermes --tui</code> tippst du einfach <code>h</code> im Terminal, und die TUI startet.</p>
+  <p>Gib diesen Prompt deinem laufenden Hermes — er kann das Tool selbst bauen und installieren:</p>
+  <pre><code>Baue ein kleines Tool, damit ich die Hermes-TUI starte, indem ich `h` ins Terminal
+tippe statt des vollen Befehls. Installiere es so, dass es auch in neuen Shells funktioniert.</code></pre>
+  <p class="aside">Warum das ein guter Erstbau ist: winzig und risikoarm — und es beweist die Übergabe aus Schritt 7 von A bis Z: du hast in normaler Sprache gefragt, Hermes hat geplant und gebaut, keine manuellen Schritte für dich übrig.</p>
+</section>
+
+<section id="cost-cheatsheet">
+  <details>
+    <summary>Kontext- &amp; Kosten-Spickzettel — so halten Sessions die Kosten klein</summary>
+    <p>Lange Sessions kosten mehr, als der Listenpreis des Modells vermuten lässt: jeder Turn rechnet den gesamten aufgelaufenen Kontext neu ab — die Kosten wachsen also mit Kadenz und mitgeschlepptem Kontext, nicht damit, wie viel du &bdquo;erledigt&ldquo; hast. Dieses Blatt liefert das mentale Modell, die Kernzahlen und eine Handvoll Hebel &mdash; Kadenz, Delegation und Forking &mdash;, die die Rechnung planbar halten. Wer nur eine Minute hat, liest die Abschnitte 1&ndash;3; der Rest ist Nachschlagewerk.</p>
+    <p class="aside">Zum manuellen Nutzen oder um es jemandem zu erklären. Vor großen Entscheidungen den Preisanker neu verifizieren. Geschrieben aus dem eigenen Hermes-Workflow des Autors — Hebel, Schwellwerte und Zahlen sind vom Autor gemessen, nicht aus der Vendor-Doku.</p>
+
+    <h3>1 · Das mentale Modell (3 Sätze)</h3>
+    <ol>
+      <li>Jeder Turn schickt die gesamte Konversation erneut ans Modell — aufgelaufener Kontext ist eine <em>wiederkehrende</em> Kostenposition, keine einmalige.</li>
+      <li>Die erneute Übertragung wird nur zum Cache-Preis (1/5 von fresh) abgerechnet, wenn der vorherige Turn aktuell ist; nach einer Minutenlücke stirbt der Cache und alles rechnet zum vollen fresh-Preis neu.</li>
+      <li>Output ist die Premium-Dimension: ~3,3× der fresh-Input-Preis; Output+Reasoning dominieren typischerweise die reale Rechnung.</li>
+    </ol>
+
+    <h3>2 · Erklärversion (ein Absatz)</h3>
+    <blockquote>&bdquo;Jeder Konversation-Turn rechnet den gesamten aufgelaufenen Kontext neu ab. Cache macht das 5× günstiger, aber nur, wenn du nicht für Minuten pausierst. Also: halte die Haupt-Session schlank (knappe Turns, gebündelte Calls, kurze Outputs), schiebe jeden großen Lesevorgang in einen Wegwerf-Subagenten, der eine Zusammenfassung zurückgibt, und wenn die Session über ihren Brief hinaus ~10–15k Tokens gewachsen ist, teile sie an einer natürlichen Bruchstelle mit einem schriftlichen Handover-Brief — der Split kostet Cents, der mitgeschleppte Kontext kostet Dollars. Miss echte Sessions in der state.db statt zu raten, und verifiziere Preise neu, bevor du den Schwellwerten vertraust.&ldquo;</blockquote>
+
+    <h3>3 · Die drei Entscheidungen</h3>
+    <p><strong>(a) Inline</strong> — jetzt in der Haupt-Session erledigen: ≤ ~10 Tool-Calls, kein einzelner Lesevorgang &gt; ~35k Zeichen (~8k Tokens; ~44k Zeichen, wenn die Child-Baseload ~20k ist), geringes Risiko, keine Nutzer-Eingabe mitten im Lauf nötig.</p>
+    <p><strong>(b) Delegieren</strong> — an einen Subagenten schieben: jeder Bulk-Lesevorgang &gt; ~8k Tokens (~35k Zeichen), wenn ≥10 Turns übrig sind.</p>
+    <ul>
+      <li>Inline zahlt R fresh einmal + R × T × Trage-Rate wiederkehrend.</li>
+      <li>Das Child zahlt R fresh einmal in seinem eigenen kurzlebigen Kontext; das Parent trägt nur die ~2–3k-Token-Zusammenfassung.</li>
+      <li>Rechenbeispiel: 50k-Zeichen-Lesevorgang über 20 Turns → inline $0.0396 vs. delegiert $0.0109 — <strong>3,6× günstiger</strong>.</li>
+      <li>Delegier-Regeln: in sich geschlossenes Ziel+Kontext (Children sehen nichts von deiner Konversation), überprüfbarer Anker für jeden externen Effekt, EIN Call mit Tasks-Array für parallele Posten, Children liefern KURZE Ergebnisse zurück (≤ ~2k Tokens).</li>
+    </ul>
+    <p><strong>(c) Fork</strong> — /new mit einem Handover-Brief: wenn der Kontext jenseits des Briefs ~10–15k Tokens übersteigt und noch mehrere Turns übrig sind. Der Fork selbst ist fast gratis; die echten Kosten sind der menschliche /new-Aufwand und der Verlust von Arbeitszustand — beide durch die Brief-Konvention minimiert.</p>
+    <ul>
+      <li>Nur an natürlichen Bruchstellen forken: fertiges Deliverable, Themenwechsel, oder alle restlichen Posten nutzer-gated.</li>
+      <li>Fork-Prozedur: <code>YYYY-MM-DD-handover-&lt;slug&gt;.md</code> schreiben mit Status+Grund, fetter Kickoff-Formel („lies &lt;Datei&gt; und führe aus"), nummerierten offenen Posten mit exakten Befehlen/Pfaden, Beleg-Pfaden. Dann den Nutzer um /new bitten und den Kickoff machen.</li>
+      <li>Ausnahme: fork KEINEN absichtlich großen, read-only-Referenzkontext, der in enger Schleife abgefragt wird — warme Großkontext-Schleifen sind günstig.</li>
+    </ul>
+    <p><strong>Risiko schlägt Größe:</strong> ein winziger Posten, der Geheimnisse, destruktive Ops oder nach außen gerichtete Sends berührt, ist Nutzer-GO-Territorium — niemals ein günstiger Inline-Posten.</p>
+
+    <h3>4 · Die Zahlen (ppq-Listenpreise)</h3>
+    <table>
+      <caption>ppq-Listenpreise für glm-5.3-flash — vor dem Verlassen auf sie bei ppq.ai prüfen.</caption>
+      <thead>
+        <tr><th scope="col">Posten</th><th scope="col">Wert</th></tr>
+      </thead>
+      <tbody>
+        <tr><td data-label="Posten">Fresh-Input</td><td data-label="Wert">$0.15825 /M Tokens</td></tr>
+        <tr><td data-label="Posten">Cache-Read-Input</td><td data-label="Wert">$0.03165 /M (= exakt 1/5 von fresh)</td></tr>
+        <tr><td data-label="Posten">Output</td><td data-label="Wert">$0.5275 /M Listenpreis (realisierter Satz kann über dem Listenpreis liegen)</td></tr>
+        <tr><td data-label="Posten">Cache-Write-Gebühr</td><td data-label="Wert">keine (ppq)</td></tr>
+        <tr><td data-label="Posten">Trage-Kosten von 1M Kontext pro Turn (Rechenbeispiel bei f=0.66)</td><td data-label="Wert">≈$0.075/Turn</td></tr>
+        <tr><td data-label="Posten">Cache-Anteil f, interaktive Sessions</td><td data-label="Wert">variabel — selbst messen</td></tr>
+        <tr><td data-label="Posten">Cache-Anteil f, enge Schleifen</td><td data-label="Wert">hoch — selbst messen</td></tr>
+        <tr><td data-label="Posten">Fork (/new + Brief) Einmalkosten</td><td data-label="Wert">klein — selbst messen</td></tr>
+        <tr><td data-label="Posten">Min-Abrechnungs-Floor bei Mini-Calls</td><td data-label="Wert">~1,8× Listen-Input-Satz</td></tr>
+        <tr><td data-label="Posten"><code>state.db</code> <code>estimated_cost_usd</code></td><td data-label="Wert">unzuverlässig: schließt Reasoning-Output aus</td></tr>
+      </tbody>
+    </table>
+    <p><code>f</code> = cache_read / (fresh + cache_read) pro Session — berechenbar aus <code>~/.hermes/state.db</code>, Tabelle <code>session_model_usage</code>.</p>
+
+    <h3>5 · Cache-TTL-Regel</h3>
+    <ul>
+      <li>Keine publizierte TTL (Z.ai: nur &bdquo;reasonable time limits, will recalculate after expiration&ldquo;). Empirisch im <strong>Minutenbereich</strong>.</li>
+      <li>Jede Nutzerlücke &gt; ein paar Minuten als vollen Cache-Miss behandeln: der gesamte aufgelaufene Kontext rechnet im nächsten Turn fresh neu ab.</li>
+      <li>Folge: dichte Bursts schlagen verteiltes Tempo — antworte hintereinander weg und forke dann an der Pause, statt in einer schweren Session zu idlen.</li>
+      <li>Willst du eine gemessene Grenze für dein Konto? Das braucht pro-Call-Timestamps aus der ppq-Usage-CSV (die Hermes-DB zeichnet keine auf).</li>
+    </ul>
+
+    <h3>6 · Output-Disziplin</h3>
+    <ul>
+      <li>Knappe Haupt-Session-Turns; von Children kurze Ergebnisse verlangen.</li>
+      <li>Tool-Calls zu einzelnen Turns bündeln — hält den Cache warm UND umgeht den Min-Abrechnungs-Floor, der Mini-Calls ~1,8× Input-Satz zahlen lässt.</li>
+      <li>Output+Reasoning ist typischerweise der größte Anteil der realen Rechnung → der Hebel Nr. 1 nach der Kadenz.</li>
+    </ul>
+
+    <h3>7 · Anti-Patterns</h3>
+    <ul>
+      <li>Eine große Datei inline vorzusammenfassen, &bdquo;um Tokens zu sparen&ldquo; — verbrennt genau den Kontext, den du schützen willst. Den Lesevorgang delegieren.</li>
+      <li>Manuelles /new zwischen jeder Runde — Forks sind günstig, aber jeder braucht einen Brief; Arbeit stattdessen routen, nur an natürlichen Bruchstellen forken.</li>
+      <li>Idlen/Polling in einer schweren Session, während man auf einen Timer oder einen Nutzer-Test wartet — zeitgesteuerte Arbeit gehört in den Kickoff der NÄCHSTEN Session.</li>
+      <li>Der DB-Kostenschätzung für die Abrechnung vertrauen — bei reasoning-lastigen Sessions ~10–15% dazurechnen; für €-Beträge die CSV verwenden.</li>
+      <li>Eine warme Großkontext-Read-only-Schleife forken.</li>
+      <li>Einem Child einen riesigen <code>context</code>-Block schicken, der die gesamte Session dupliziert — in sich geschlossen ≠ alles; gib das Ziel, die exakten Pfade und die Abnahmekriterien.</li>
+    </ul>
+
+    <h3>8 · Messen statt vorhersagen</h3>
+    <pre><code>sqlite3 ~/.hermes/state.db \
+  "SELECT session_id, input_tokens, cache_read_tokens, output_tokens,
+          reasoning_tokens, api_call_count
+   FROM session_model_usage ORDER BY rowid DESC LIMIT 10;"
+# f = cache_read / (input + cache_read)</code></pre>
+    <p>Die Kontextgröße einer Aufgabe lässt sich nicht vorab annehmen — frag ab, was IST, bevor du Schwellwerte justierst. Prüfe auch <code>sessions.parent_session_id</code> für echte Child-Baseloads.</p>
+
+    <h3>9 · Offene Caveats (ehrliche Unbekannte)</h3>
+    <ul>
+      <li>Die Schwellwerte sind ein Schnappschuss — Preise neu verifizieren; es gibt keinen Repricing-Alarm.</li>
+      <li>Child-Baseload ~15k ist unverifiziert — nachmessen.</li>
+      <li>Cache-TTL ist nicht publiziert; Minutenbereich aus gemessenem f abgeleitet, nicht aus einer Vendor-Angabe.</li>
+      <li>Dieses Blatt deckt nur Größe/Kosten/Risiko-Routing ab — privacy-sensible Arbeit braucht eine zusätzliche Schicht obendrauf.</li>
+    </ul>
+  </details>
+</section>
+</main>
+
+<footer>
+  <p class="meta">ppq-Plugin v0.3.0, veröffentlicht 2026-10-21 · <a href="https://github.com/thepurpose-npub/ppq-hermes-provider" target="_blank" rel="noopener noreferrer">github.com/thepurpose-npub/ppq-hermes-provider</a></p>
+</footer>
+</body>
+</html>
