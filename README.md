@@ -2,7 +2,8 @@
 
 Static website that bootstraps a newcomer onto [Hermes Agent](https://hermes-agent.nousresearch.com/)
 with [PayPerQ (ppq.ai)](https://ppq.ai) — pay-per-use, no subscription — using the
-[ppq model-provider plugin](https://github.com/thepurpose-npub/ppq-hermes-provider) (v0.3.0).
+[ppq model-provider plugin](https://github.com/thepurpose-npub/ppq-hermes-provider) (v0.3.1,
+live in the official Hermes plugin catalog since 2026-10-24).
 
 ## Live
 
@@ -21,15 +22,20 @@ Served by GitHub Pages from this repo (`main` root):
 - Local preview: `python3 -m http.server 8778` from this repo's root, then
   open http://localhost:8778/.
 - This site deliberately lives in its own repo — the plugin repo
-  (`thepurpose-npub/ppq-hermes-provider`) is sha-pinned by an open
-  plugin-catalog PR and must not move HEAD for site edits.
+  (`thepurpose-npub/ppq-hermes-provider`) is sha-pinned by the merged
+  plugin-catalog entry (`plugin-catalog/ppq.yaml`, v0.3.1) and must not move
+  HEAD for site edits.
 - `local/` — local working history (handover briefs, deploy tars, archived
   drafts), gitignored via a single rule and not part of the site.
 
 ## Status
 
+- **v1.2.0** — catalog install path: step 2 now uses `hermes plugins install
+  ppq` (plugin live in the official Hermes plugin catalog since 2026-10-24,
+  v0.3.1); manual clone kept as a fallback aside; EN + DE lede/step/footer
+  updated.
 - **v1.1.0** — German localization (`de/index.html`) complete: all 7 setup
   steps, cost-rail check, troubleshooting, and the cost cheatsheet translated.
   Language switcher added: pill in the hero, English default, German
   cross-linked.
-- **v1.2.0 (planned)** — further UI polish and translations.
+- **v1.3.0 (planned)** — further UI polish and translations.

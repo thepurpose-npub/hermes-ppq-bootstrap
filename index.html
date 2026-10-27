@@ -16,7 +16,7 @@
   </div>
   <p class="eyebrow">Setup guide</p>
   <h1>Bootstrap Hermes with PayPerQ (ppq.ai)</h1>
-  <p class="lede">Seven steps to a working Hermes Agent on PayPerQ — pay-per-use, no subscription — with <code>z-ai/glm-5.3-flash</code> as the only pinned model. Once the smoke test works, the agent itself is your LLM interface.</p>
+  <p class="lede">Seven steps to a working Hermes Agent on PayPerQ — pay-per-use, no subscription — with <code>z-ai/glm-5.3-flash</code> as the only pinned model. The ppq plugin now ships in Hermes' official plugin catalog, so installing it is a single command. Once the smoke test works, the agent itself is your LLM interface.</p>
 </header>
 
 <nav class="toc" aria-label="Contents">
@@ -45,12 +45,10 @@
 </section>
 
 <section id="step-2">
-  <h2>2 · Install the ppq plugin (from its GitHub repo)</h2>
-  <p>The plugin is <strong>not yet in the Hermes plugin catalog</strong>, so install it manually from the repository. This copies the plugin files into Hermes' plugin directory:</p>
-  <pre><code>git clone https://github.com/thepurpose-npub/ppq-hermes-provider
-mkdir -p ~/.hermes/plugins/model-providers/ppq
-cp ppq-hermes-provider/model-providers/ppq/{__init__.py,plugin.yaml} \
-   ~/.hermes/plugins/model-providers/ppq/</code></pre>
+  <h2>2 · Install the ppq plugin (one command)</h2>
+  <p>The plugin ships in the <strong>official Hermes plugin catalog</strong> — a fresh install sees it via the live catalog, no manual cloning:</p>
+  <pre><code>hermes plugins install ppq</code></pre>
+  <p class="aside">Requires Hermes &ge; 0.21.4 — run <code>hermes update</code> first if yours is older. This installs the catalog-pinned version (v0.3.1, a verified commit of <a href="https://github.com/thepurpose-npub/ppq-hermes-provider" target="_blank" rel="noopener noreferrer">the plugin repo</a>). Manual fallback if the catalog is unreachable: clone the repo and copy <code>model-providers/ppq/{__init__.py,plugin.yaml}</code> into <code>~/.hermes/plugins/model-providers/ppq/</code>.</p>
 </section>
 
 <section id="step-3">
@@ -76,7 +74,7 @@ cp ppq-hermes-provider/model-providers/ppq/{__init__.py,plugin.yaml} \
   <pre><code>hermes auth list            # should list a credential under "ppq"</code></pre>
   <p class="aside">Fallback if <code>hermes auth add ppq</code> isn't recognized on your install: run <code>hermes config env-path | xargs nano</code> and add the line <code>PPQ_API_KEY=sk-...</code> (your real key) at the bottom, then save.</p>
   <p>Verify it loaded:</p>
-  <pre><code>hermes plugins list         # should show "ppq — PayPerQ — v0.3.0"
+  <pre><code>hermes plugins list         # should show "ppq — PayPerQ — v0.3.1"
 hermes auth status          # should show ppq as ready (not missing/expired)</code></pre>
 </section>
 
@@ -246,7 +244,7 @@ instead of the full command. Install it so it works in new shells too.</code></p
 </main>
 
 <footer>
-  <p class="meta">ppq plugin v0.3.0, published 2026-10-21 · <a href="https://github.com/thepurpose-npub/ppq-hermes-provider" target="_blank" rel="noopener noreferrer">github.com/thepurpose-npub/ppq-hermes-provider</a></p>
+  <p class="meta">ppq plugin v0.3.1 · in the official Hermes plugin catalog since 2026-10-24 · <a href="https://github.com/thepurpose-npub/ppq-hermes-provider" target="_blank" rel="noopener noreferrer">github.com/thepurpose-npub/ppq-hermes-provider</a></p>
 </footer>
 </body>
 </html>
